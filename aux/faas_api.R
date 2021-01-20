@@ -5,10 +5,11 @@
 #' @model_spec: modeling and CV setup
 #' @project_id: project name
 #' @user_email: email to receive the outputs
+#' @access_key: user access Key (authentication)
 #' @run_local: run localhost [dev purposes only]
 
-faas_api <- function(data_list, date_variable, date_format, 
-                     model_spec, project_id, user_email, run_local = FALSE) {
+faas_api <- function(data_list, date_variable, date_format,
+                     model_spec, project_id, user_email, access_key, run_local = FALSE) {
   
 # Select and format date variable 
   
@@ -66,9 +67,14 @@ faas_api <- function(data_list, date_variable, date_format,
     
   }
   
-  
-  
-  ### Envia requisição POST =================================================
-  response <- httr::POST(url, body = list(body = body), encode = "json", verbose(data_out = FALSE))
-  
+  # Define a chave de acesso para poder fazer requisições via API ============
+  headers = c(`Authorization` = access_key)
+
+  ### Envia requisição POST ==================================================
+  response <- httr::POST(url,
+                         body = list(body = body),
+                         httr::add_headers(.headers = headers),
+                         encode = "json", 
+                         verbose(data_out = FALSE))
+
 }
