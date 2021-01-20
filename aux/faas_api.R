@@ -11,20 +11,27 @@
 faas_api <- function(data_list, date_variable, date_format,
                      model_spec, project_id, user_email, access_key, run_local = FALSE) {
   
-# Select and format date variable 
   
+  
+  # Fix columns names with "data_" pattern
+  data_list <- lapply(data_list, function(x) {
+    names(x)[names(x) != "data_tidy"] <- gsub("data_", "datas_", names(x)[names(x) != "data_tidy"])
+    x})
+  
+  
+  # Select and format date variable 
   data_list = base::lapply(data_list, function(x) { 
     names(x)[names(x) == date_variable] <- "data_tidy"
     x$data_tidy <- as.Date(x$data_tidy, format = date_format) 
     x })
-
+  
+  
   # Checa se o usuário definiu um horizonte de projeções
   if(any(missing(data_list), missing(model_spec))) {
     
     stop("You must declare every argument: 'data_list', 'model_spec', 'project_id', 'user_email'")
     
   }
-  
   
   # Force first column to be the Y variable
   for(i in seq_along(data_list)){
@@ -69,12 +76,12 @@ faas_api <- function(data_list, date_variable, date_format,
   
   # Define a chave de acesso para poder fazer requisições via API ============
   headers = c(`Authorization` = access_key)
-
+  
   ### Envia requisição POST ==================================================
   response <- httr::POST(url,
                          body = list(body = body),
                          httr::add_headers(.headers = headers),
                          encode = "json", 
                          verbose(data_out = FALSE))
-
+  
 }
