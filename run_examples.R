@@ -51,6 +51,9 @@ project_id <- "project_name"
 ### 4) Set User Email  ============================================================
 user_email <- "user@domain.com"
 
-### Send request  ===============================================================
-faas_api(data_list, date_variable, date_format, model_spec, project_id, user_email) 
+### 5) Set Access Key ============================================================
+access_key <- "User access key"
 
+### Send request  ===============================================================
+faas_api(data_list, date_variable, date_format, model_spec,
+         project_id, user_email, access_key) 

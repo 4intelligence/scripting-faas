@@ -14,7 +14,8 @@ examples covered in the tutorial below.
 
 ## Autentication
 
-Available soon.
+An **access key** is required in order to sucessfully send the request.
+It will be granted to each user individually.
 
 ## I) How it works
 
@@ -109,9 +110,12 @@ the user:
   - **log**: if TRUE apply log transformation to the data;
 
   - **accuracy\_crit**: which criterion to measure the accuracy of the
-    forecast during the CV (can be MPE, MAPE, or RMSE);
+    forecast during the CV (can be MPE, MAPE, WMAPE or RMSE);
 
   - **exclusions**: restrictions on features in the same model;
+
+  - **golden\_variables**: features that must be included in, at least,
+    one model (separate or together).
 
 <br>
 
@@ -138,6 +142,7 @@ model_spec <- list(log = TRUE,
                    accuracy_crit = "MAPE",
                    info_crit = "AIC",
                    exclusions = list(),
+                   golden_variables = "",
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
@@ -165,12 +170,19 @@ modeling is over.
 user_email <- "user@domain.com"
 ```
 
-#### 5\) Send job request
+### 5\) Access Key
+
+``` r
+access_key <- "User access key"
+```
+
+#### 6\) Send job request
 
 Everything looks nice? Great\! Now you can send **FaaS API** request:
 
 ``` r
-faas_api(data_list, date_variable, date_format, model_spec, project_id, user_email) 
+faas_api(data_list, date_variable, date_format, model_spec, 
+         project_id, user_email, access_key) 
 ```
 
 ## II) Advanced Options
@@ -181,7 +193,7 @@ understand the implications before changing them.*
 
 The accuracy criteria used to select the best models will be “RMSE”.
 We’re not applying log transformation on data. Moreover, we also make
-use of the **‘exclusions’** option :
+use of the **‘exclusions’** and **golden\_variables** options:
 
 ``` r
 ## EXAMPLE 2
@@ -194,6 +206,7 @@ model_spec <- list(log = FALSE,
                    info_crit = "AIC",
                    exclusions = list(c("fs_massa_real", "fs_rend_medio"),
                                      c("fs_pop_ea", "fs_pop_des", "fs_pop_ocu")),
+                   golden_variables = c("fs_pmc", "fs_ici"),
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
@@ -220,7 +233,16 @@ and so on.
 
 <br>
 
-The **selection methods** determine feature selection algorithms that
+With the **golden\_variables** argument, we can guarantee that at least
+some of best models contain one or both of the ‘golden’ ones:
+
+``` r
+golden_variables = c("fs_pmc", "fs_ici")
+```
+
+<br>
+
+The **selection\_methods** determine feature selection algorithms that
 will be used when it comes to big datasets (one with a large number of
 explanatory features). More precisely, if the number of features in the
 dataset exceeds 14, feature selection methods will reduce
