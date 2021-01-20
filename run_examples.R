@@ -22,7 +22,7 @@ date_variable <- "DATE_VARIABLE"
 date_format <- '%Y-%m-%d' # or'%m/%d/%Y' 
 
 # ## EXAMPLE 2
-#data_list <-  list(dataset_1, dataset_1, dataset_1)
+#data_list <-  list(dataset_1, dataset_2, dataset_3)
 #names(data_list) <- c("fs_pim", "fs_pmc", "fs_pib")
 #date_variable <- "DATE_VARIABLE"
 #date_format <- '%Y-%m-%d' # or'%m/%d/%Y' 
@@ -35,8 +35,8 @@ model_spec <- list(log = TRUE,
                    n_best = 20,
                    accuracy_crit = "MAPE",
                    info_crit = "AIC",
-                   exclusions = list(c("fs_massa_real", "fs_rend_medio"),
-                                     c("fs_pop_ea", "fs_pop_des", "fs_pop_ocu")), 
+                   exclusions = list(), 
+                   golden_variables = c(),
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
