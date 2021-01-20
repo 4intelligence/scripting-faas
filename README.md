@@ -61,6 +61,10 @@ dataset_1 <- readxl::read_excel("./inputs/dataset_1.xlsx")
 # and name the list element with the name of the target variable
 data_list <-  list(dataset_1)
 names(data_list) <- c("fs_pim")
+
+#Also, specify the date variable and its format 
+date_variable <- "DATE_VARIABLE"
+date_format <- '%Y-%m-%d'
 ```
 
 <br>
@@ -77,6 +81,11 @@ dataset_3 <- readxl::read_excel("./inputs/dataset_3.xlsx")
 # and name every list element with the name of the target variable
 data_list <-  list(dataset_1, dataset_2, dataset_3)
 names(data_list) <- c("fs_pim", "fs_pmc", "fs_pib")
+
+# Also, specify the date variable and its format 
+# (must have the same name in all datasets)
+date_variable <- "DATE_VARIABLE"
+date_format <- '%Y-%m-%d'
 ```
 
 <br>
@@ -161,7 +170,7 @@ user_email <- "user@domain.com"
 Everything looks nice? Great\! Now you can send **FaaS API** request:
 
 ``` r
-faas_api(data_list, model_spec, project_id, user_email)
+faas_api(data_list, date_variable, date_format, model_spec, project_id, user_email) 
 ```
 
 ## II) Advanced Options

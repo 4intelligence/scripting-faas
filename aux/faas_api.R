@@ -7,8 +7,16 @@
 #' @user_email: email to receive the outputs
 #' @run_local: run localhost [dev purposes only]
 
-faas_api <- function(data_list, model_spec, project_id, user_email, run_local = FALSE) {
+faas_api <- function(data_list, date_variable, date_format, 
+                     model_spec, project_id, user_email, run_local = FALSE) {
   
+# Select and format date variable 
+  
+  data_list = base::lapply(data_list, function(x) { 
+    names(x)[names(x) == date_variable] <- "data_tidy"
+    x$data_tidy <- as.Date(x$data_tidy, format = date_format) 
+    x })
+
   # Checa se o usuário definiu um horizonte de projeções
   if(any(missing(data_list), missing(model_spec))) {
     
