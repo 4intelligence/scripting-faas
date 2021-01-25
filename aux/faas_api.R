@@ -9,22 +9,26 @@
 #' @run_local: run localhost [dev purposes only]
 
 faas_api <- function(data_list, date_variable, date_format,
-                     model_spec, project_id, user_email, access_key, run_local = FALSE) {
-  
-  
+                     model_spec, project_id, user_email, access_key, run_local = FALSE) {  
   
   # Fix columns names with "data_" pattern
   data_list <- lapply(data_list, function(x) {
     names(x)[names(x) != "data_tidy"] <- gsub("data_", "datas_", names(x)[names(x) != "data_tidy"])
-    x})
-  
+    x})  
   
   # Select and format date variable 
+
   data_list = base::lapply(data_list, function(x) { 
-    names(x)[names(x) == date_variable] <- "data_tidy"
-    x$data_tidy <- as.Date(x$data_tidy, format = date_format) 
-    x })
-  
+      names(x)[names(x) == date_variable] <- "data_tidy"
+
+      check_date = as.Date(x$data_tidy, format = date_format)
+      if( length(check_date) == length(unique(format(check_date, "%Y-%m" )))) {
+        x$data_tidy <- as.Date(sub("\\d{2}$", "01", x$data_tidy), format = date_format)
+      } else {
+        x$data_tidy <- as.Date(x$data_tidy, format = date_format)
+      }
+       
+      x })    
   
   # Checa se o usuário definiu um horizonte de projeções
   if(any(missing(data_list), missing(model_spec))) {
@@ -36,8 +40,7 @@ faas_api <- function(data_list, date_variable, date_format,
   # Force first column to be the Y variable
   for(i in seq_along(data_list)){
     
-    y_column <- names(data_list)[[i]]
-    
+    y_column <- names(data_list)[[i]]    
     
     tryCatch(
       expr = { 
@@ -47,8 +50,7 @@ faas_api <- function(data_list, date_variable, date_format,
         stop("API input error: 'data_list' element does not exist in the dataset. Please, change the 'names(data_list)' input and send the request again.")
       }  
     )
-  }
-  
+  }  
   
   ### Criando uma lista que agrega todas as infos 
   ### necessárias para a requisição via API. Depois
