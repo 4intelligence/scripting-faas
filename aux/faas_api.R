@@ -1,5 +1,6 @@
-
 # Função para requisição de modelagem a partir os inputs necesários =============================
+
+# Compatible with version "Alfred 1.0.1"
 
 #' @data_list: list with datasets
 #' @model_spec: modeling and CV setup
@@ -11,46 +12,48 @@
 faas_api <- function(data_list, date_variable, date_format,
                      model_spec, project_id, user_email, access_key, run_local = FALSE) {  
   
-  # Fix columns names with "data_" pattern
-  data_list <- lapply(data_list, function(x) {
-    names(x)[names(x) != "data_tidy"] <- gsub("data_", "datas_", names(x)[names(x) != "data_tidy"])
-    x})  
   
-  # Select and format date variable 
-
-  data_list = base::lapply(data_list, function(x) { 
-      names(x)[names(x) == date_variable] <- "data_tidy"
-
-      check_date = as.Date(x$data_tidy, format = date_format)
-      if( length(check_date) == length(unique(format(check_date, "%Y-%m" )))) {
-        x$data_tidy <- as.Date(sub("\\d{2}$", "01", x$data_tidy), format = date_format)
-      } else {
-        x$data_tidy <- as.Date(x$data_tidy, format = date_format)
-      }
-       
-      x })    
-  
-  # Checa se o usuário definiu um horizonte de projeções
-  if(any(missing(data_list), missing(model_spec))) {
+  # Checa se o usuário definiu os argumentos necessários ===============================
+  if(any(missing(data_list), missing(model_spec), missing(date_variable), missing(date_format), 
+         missing(project_id), missing(user_email), missing(access_key))) {
     
-    stop("You must declare every argument: 'data_list', 'model_spec', 'project_id', 'user_email'")
+    stop("You must declare every argument: 'data_list', 'model_spec', 'project_id', 'user_email', 'date_format', 'date_variable', 'access_key")
+    
+  }
+   
+  
+  # Trata caracteres especiais ===============================
+  names(data_list) <- make.names(iconv(names(data_list), to = 'ASCII//TRANSLIT'))
+  date_variable <- make.names(iconv(date_variable, to = 'ASCII//TRANSLIT'), unique = TRUE)
+  
+  if(length(model_spec[["exclusions"]]) > 0) {
+    model_spec[["exclusions"]] <- lapply(model_spec[["exclusions"]], 
+                                         function(x) make.names(iconv(x,  to = 'ASCII//TRANSLIT'), unique = TRUE))
     
   }
   
-  # Force first column to be the Y variable
-  for(i in seq_along(data_list)){
-    
-    y_column <- names(data_list)[[i]]    
-    
-    tryCatch(
-      expr = { 
-        data_list[[i]] =  data_list[[i]][ , c(y_column, setdiff(colnames(data_list[[i]]), y_column))]
-      },
-      error = function(e) {
-        stop("API input error: 'data_list' element does not exist in the dataset. Please, change the 'names(data_list)' input and send the request again.")
-      }  
-    )
-  }  
+  if(length(model_spec[["golden_variables"]]) > 0) {
+    model_spec[["golden_variables"]] <- make.names(iconv(model_spec[["golden_variables"]], to = 'ASCII//TRANSLIT'), unique = TRUE)
+  }
+  
+  data_list <- lapply(data_list, function(x) {names(x) <- make.names(iconv(names(x), to = 'ASCII//TRANSLIT'), unique = TRUE)
+  x})
+   
+  
+  # Force date variable to be called 'data_tidy'  =====================
+  # Select and format date variable 
+  data_list = base::lapply(data_list, function(x) { 
+    names(x)[names(x) == date_variable] <- "data_tidy"
+    x$data_tidy <- as.Date(x$data_tidy, format = date_format) 
+    x })
+  
+  
+  # Add prefix at Y variables =====================
+  y_names <- sapply(seq_along(data_list), function(x) {
+    a <- paste0("forecast_", x, "_", names(data_list)[x])
+    a})
+  names(data_list) <- y_names
+  
   
   ### Criando uma lista que agrega todas as infos 
   ### necessárias para a requisição via API. Depois
@@ -80,10 +83,26 @@ faas_api <- function(data_list, date_variable, date_format,
   headers = c(`Authorization` = access_key)
   
   ### Envia requisição POST ==================================================
-  response <- httr::POST(url,
-                         body = list(body = body),
-                         httr::add_headers(.headers = headers),
-                         encode = "json", 
-                         verbose(data_out = FALSE))
+  response <- httr::RETRY('POST',
+                          url,
+                          body = list(body = body),
+                          httr::add_headers(.headers = headers),
+                          encode = "json",
+                          times = 5)
+  
+  
+  
+  
+  if(response$status_code == 200) {
+    
+    message("HTTP 200:\n", 
+            "Request successfully received!\n
+             Results will soon be available in your Projects module")
+    
+  } else {
+    
+    message("Something went wrong!\nStatus code:", response$status_code)
+    
+  }  
   
 }
