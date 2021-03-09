@@ -1,7 +1,7 @@
 FaaS - API modeling
 ================
 
-![R](https://img.shields.io/badge/R%3E%3D-3.0.0-blue.svg) ![License: MPL
+![R](https://img.shields.io/badge/R%3E%3D-3.6.0-blue.svg) ![License: MPL
 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)
 
 **Repository for running scale modeling on FaaS**
@@ -12,6 +12,11 @@ Version 2.0](https://www.mozilla.org/en-US/MPL/2.0/).
 The script ‘run\_examples.R’ has all the necessary code to run both
 examples covered in the tutorial below.
 
+Linux users must ensure that the following libs are installed:
+
+1)  ‘libcurl4-openssl-dev’
+2)  ‘libxml2-dev’
+
 ## Autentication
 
 An **access key** is required in order to sucessfully send the request.
@@ -19,19 +24,19 @@ It will be granted to each user individually.
 
 ## I) How it works
 
-You only need two functions to request a job, both inside the “aux”
+You only need two functions to request a job, both inside the “api”
 folder. **faas\_api** is the main function. **load\_libs** only load
 (and install if necessary) a few external libraries.
 
 Let’s load them:
 
 ``` r
-source("./aux/load_libs.R")
-source("./aux/faas_api.R")
+source("./api/load_libs.R")
+source("./api/faas_api.R")
 ```
 
-There are **4 basic arguments** to feed ‘faas\_api’ function. We are
-going through all of them in this example and then will call the API.
+There are some arguments to feed ‘faas\_api’ function. We are going
+through all of them in this example and then will call the API.
 
 #### 1\) Data List \[‘data\_list’\]
 
@@ -115,7 +120,14 @@ the user:
   - **exclusions**: restrictions on features in the same model;
 
   - **golden\_variables**: features that must be included in, at least,
-    one model (separate or together).
+    one model (separate or together);
+
+  - **fill\_forecast**: if TRUE, it enables forecasting explanatory
+    variables in order to avoid NAs in future values;
+
+  - **cv\_summary**: determines whether ‘mean’ ou ‘median’ will be used
+    to calculate the summary statistic of the accuracy measure over the
+    CV windows.
 
 <br>
 
@@ -143,6 +155,8 @@ model_spec <- list(log = TRUE,
                    info_crit = "AIC",
                    exclusions = list(),
                    golden_variables = c(),
+                   fill_forecast = FALSE,
+                   cv_summary = 'mean',
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
@@ -193,7 +207,8 @@ understand the implications before changing them.*
 
 The accuracy criteria used to select the best models will be “RMSE”.
 We’re not applying log transformation on data. Moreover, we also make
-use of the **‘exclusions’** and **golden\_variables** options:
+use of the **‘exclusions’**, **golden\_variables**, **fill\_forecast**
+and **cv\_summary** options:
 
 ``` r
 ## EXAMPLE 2
@@ -207,6 +222,8 @@ model_spec <- list(log = FALSE,
                    exclusions = list(c("fs_massa_real", "fs_rend_medio"),
                                      c("fs_pop_ea", "fs_pop_des", "fs_pop_ocu")),
                    golden_variables = c("fs_pmc", "fs_ici"),
+                   fill_forecast = TRUE,
+                   cv_summary = 'median',
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
@@ -242,6 +259,31 @@ golden_variables = c("fs_pmc", "fs_ici")
 
 <br>
 
+With the **fill\_forecast** argument, we forecast explanatory variables
+in order to avoid NAs in future values. Warning: For most variables a
+simple univariate ARIMA is used in this process (exception: dummy
+variables are filled using Random Forest) which may hinder the
+performance of the dependent variable forecast.
+
+``` r
+fill_forecast = TRUE
+```
+
+<br>
+
+Regarding the **cv\_summary** argument, should we calculate the summary
+statistic of the accuracy measures using the mean or the median? The
+**mean** is the most usual, however, the **median** is more robust to
+outliers and might be a better statistic when you think that the cross
+validation is affected by extreme situations, such as the Covid 19
+pandemic.
+
+``` r
+cv_summary = 'median'
+```
+
+<br>
+
 The **selection\_methods** determine feature selection algorithms that
 will be used when it comes to big datasets (one with a large number of
 explanatory features). More precisely, if the number of features in the
@@ -251,11 +293,11 @@ way. In this example, we turn off the Lasso method and work only with
 Random Forestation and the correlation approach.
 
 ``` r
- selection_methods = list(
-                     lasso = FALSE,
-                     rf = TRUE,
-                     corr = TRUE,
-                     apply.collinear = "")
+selection_methods = list(
+  lasso = FALSE,
+  rf = TRUE,
+  corr = TRUE,
+  apply.collinear = "")
 ```
 
 <br>

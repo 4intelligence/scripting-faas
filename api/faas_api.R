@@ -1,6 +1,5 @@
-# Função para requisição de modelagem a partir os inputs necesários =============================
 
-# Compatible with version "Alfred 1.0.1"
+# Função para requisição de modelagem a partir os inputs necesários =============================
 
 #' @data_list: list with datasets
 #' @model_spec: modeling and CV setup
@@ -20,7 +19,8 @@ faas_api <- function(data_list, date_variable, date_format,
     stop("You must declare every argument: 'data_list', 'model_spec', 'project_id', 'user_email', 'date_format', 'date_variable', 'access_key")
     
   }
-   
+  
+  
   
   # Trata caracteres especiais ===============================
   names(data_list) <- make.names(iconv(names(data_list), to = 'ASCII//TRANSLIT'))
@@ -38,7 +38,8 @@ faas_api <- function(data_list, date_variable, date_format,
   
   data_list <- lapply(data_list, function(x) {names(x) <- make.names(iconv(names(x), to = 'ASCII//TRANSLIT'), unique = TRUE)
   x})
-   
+  
+  
   
   # Force date variable to be called 'data_tidy'  =====================
   # Select and format date variable 
@@ -75,7 +76,7 @@ faas_api <- function(data_list, date_variable, date_format,
   } else {
     
     ### Seta o endpoint para a requisição ===================================
-    url <- "https://scalling-models-api-pixv2bua7q-uk.a.run.app/cluster"
+    url <- "https://scalling-models-api-pixv2bua7q-uk.a.run.app/cluster" # externo
     
   }
   

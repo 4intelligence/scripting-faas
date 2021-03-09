@@ -3,8 +3,8 @@
 ##############
 
 # Load required packages ans functions ================================
-source("./aux/load_libs.R")
-source("./aux/faas_api.R")
+source("./api/load_libs.R")
+source("./api/faas_api.R")
 
 # 1) Load datasets   ====================================================
 dataset_1 <- readxl::read_excel("inputs/dataset_1.xlsx")
@@ -37,16 +37,17 @@ model_spec <- list(log = TRUE,
                    info_crit = "AIC",
                    exclusions = list(), 
                    golden_variables = c(),
+                   fill_forecast = FALSE,
+                   cv_summary = 'mean',
                    selection_methods = list(
                      lasso = TRUE,
                      rf = TRUE,
                      corr = TRUE,
-                     apply.collinear = c("corr","rf","lasso","no_reduction"))
-                     )
+                     apply.collinear = c("corr","rf","lasso","no_reduction")))
 
 
 ### 3) Set Project Name  ==========================================================
-project_id <- "project_name"
+project_id <- "example_project"
 
 ### 4) Set User Email  ============================================================
 user_email <- "user@domain.com"
@@ -55,5 +56,5 @@ user_email <- "user@domain.com"
 access_key <- "User access key"
 
 ### Send request  ===============================================================
-faas_api(data_list, date_variable, date_format, model_spec,
-         project_id, user_email, access_key) 
+faas_api(data_list, date_variable, date_format, model_spec, project_id, user_email, access_key) 
+
