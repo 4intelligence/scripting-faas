@@ -105,51 +105,60 @@ the user:
   - **n\_steps**: forecast horizon that will be used in the
     cross-validation (if 3, 3 months ahead; if 12, 12 months ahead,
     etc.);
+    - n_steps should be an integer greater than or equal to 1. It is recommended that 'n_steps+n_windows-1' does not exceed 30\% of the length of your data. 
 
   - **n\_windows**: how many windows the size of ‘Forecast Horizon’ will
     be evaluated during cross-validation (CV);
+    - n_windows should be an integer greater than or equal to 1. It is recommended that 'n_steps+n_windows-1' does not exceed 30\% of the length of your data. 
 
   - **seas.d**: if TRUE, it includes seasonal dummies in every
-    estimation.
+    estimation;
+     - Can be set to TRUE or FALSE. 
 
-  - **log**: if TRUE apply log transformation to the data;
+  - **log**: if TRUE apply log transformation to the data (only variables with all values greater than 0 will be log transformed);
+     - Can be set to TRUE or FALSE. 
 
   - **accuracy\_crit**: which criterion to measure the accuracy of the
-    forecast during the CV (can be MPE, MAPE, WMAPE or RMSE);
+    forecast during the CV;
+     - Can be set to MPE, MAPE, WMAPE or RMSE.
 
-  - **exclusions**: restrictions on features in the same model;
+  - **exclusions**: restrictions on features in the same model (which variables should not be included in the same model);
+     - If none, 'exclusions = list()', otherwise it should receive a list containing vectors of variables (see advanced options below for examples).
 
   - **golden\_variables**: features that must be included in, at least,
     one model (separate or together);
+    - If none, 'golden_variables = c()', otherwise it should receive a vector with the golden variables (see advanced options below for examples).
 
   - **fill\_forecast**: if TRUE, it enables forecasting explanatory
     variables in order to avoid NAs in future values;
+    - Can be set to TRUE or FALSE. 
 
   - **cv\_summary**: determines whether ‘mean’ ou ‘median’ will be used
     to calculate the summary statistic of the accuracy measure over the
-    CV windows.
+    CV windows;
+     - Can be set to 'mean' or 'median'.
 
 <br>
 
-The critical input we expect from users is the CV settings (n\_steps and
+The critical and required input we expect from users is the CV settings (n\_steps and
 n\_windows). In this example, we set our modeling algorithm to perform a
 CV, which will evaluate forecasts 1 step ahead (‘n\_steps’), 12 times
-(‘n\_windows’).
-
-In this example, we keep other specifications at their default values.
-The accuracy criteria used to select the best models will be “MAPE”.
-We’ll be using data with log transformation, and proper seasonal
-dummies will be used in every estimation. Moreover, we avoid
-multicollinearity issues in linear models and apply three distinct
-methods of feature selection. In the last section of this file, we
-present more advanced settings examples.
+(‘n\_windows’). 
 
 ``` r
 ## EXAMPLE 1
-model_spec <- list(log = TRUE,
+model_spec <- list(n_steps = 1,
+                   n_windows = 12)
+```
+
+If the user chooses not to specify the remaining parameters in the model_spec, we will use the default settings (see below). With the default settings we’ll log transform the data and use proper seasonal dummies in every estimation. The accuracy criteria used to select the best models will be 'MAPE', and they will be summarized using the 'mean' across the CV windows. Missing in explanatory variables in the future values will not be filled, and we will use all three feature selection methods available - Lasso, Random Forest and Correlation, while avoiding collinearity among explanatory variables in a model.
+
+``` r
+## Default settings
+model_spec <- list(n_steps = <input>,
+                   n_windows = <input>,
+                   log = TRUE,
                    seas.d = TRUE,
-                   n_steps = 1,
-                   n_windows = 12,
                    n_best = 20,
                    accuracy_crit = "MAPE",
                    info_crit = "AIC",
@@ -163,6 +172,7 @@ model_spec <- list(log = TRUE,
                      corr = TRUE,
                      apply.collinear = c("corr","rf","lasso","no_reduction")))
 ```
+
 
 <br>
 
@@ -192,7 +202,16 @@ access_key <- "User access key"
 
 #### 6\) Send job request
 
-Everything looks nice? Great\! Now you can send **FaaS API** request:
+Wants to make sure everything is alright? Though not necessary, you can validate your request beforehand by using the following function:
+
+``` r
+validate_request(data_list, date_variable, date_format,
+         model_spec, project_id, user_email,
+         access_key)
+```
+It will return a message indicating your specifications are in order or it will point out to the arguments that need adjustment. 
+
+Or you can simply send your **FaaS API** request. We'll take care of running the *validate_request* and let you know if something needs your attention before we can proceed. If everything is in order, we'll automatically send the request, and you will see a message with the status of your request in your console.
 
 ``` r
 faas_api(data_list, date_variable, date_format, model_spec, 
@@ -212,10 +231,10 @@ and **cv\_summary** options:
 
 ``` r
 ## EXAMPLE 2
-model_spec <- list(log = FALSE,
-                   seas.d = TRUE,
-                   n_steps = 1,
+model_spec <- list(n_steps = 1,
                    n_windows = 12,
+                   log = FALSE,
+                   seas.d = TRUE,
                    n_best = 20,
                    accuracy_crit = "RMSE",
                    info_crit = "AIC",
@@ -290,7 +309,7 @@ explanatory features). More precisely, if the number of features in the
 dataset exceeds 14, feature selection methods will reduce
 dimensionality, guaranteeing the best results in a much more efficient
 way. In this example, we turn off the Lasso method and work only with
-Random Forestation and the correlation approach.
+Random Forest and the correlation approach. Notice that we have set 'apply.collinear = ""', this is the equivalent to specify that there is no need to avoid collinearity within the explanatory variables in the models.
 
 ``` r
 selection_methods = list(

@@ -16,7 +16,7 @@ dataset_3 <- readxl::read_excel("inputs/dataset_3.xlsx")
 # Also, specify the date variable and its format ========================
 
 ## EXAMPLE 1
-data_list <-  list(dataset_1)
+data_list <-list(dataset_1)
 names(data_list) <- c("fs_pim")
 date_variable <- "DATE_VARIABLE"
 date_format <- '%Y-%m-%d' # or'%m/%d/%Y' 
@@ -27,34 +27,25 @@ date_format <- '%Y-%m-%d' # or'%m/%d/%Y'
 #date_variable <- "DATE_VARIABLE"
 #date_format <- '%Y-%m-%d' # or'%m/%d/%Y' 
 
-### 2) Basic Modeling Setup ============================================
-model_spec <- list(log = TRUE,
-                   seas.d = TRUE,
+### 2) Basic Modeling Setup ===========================================
+model_spec <- list(
                    n_steps = 1,
-                   n_windows = 2,
-                   n_best = 20,
-                   accuracy_crit = "MAPE",
-                   info_crit = "AIC",
-                   exclusions = list(), 
-                   golden_variables = c(),
-                   fill_forecast = FALSE,
-                   cv_summary = 'mean',
-                   selection_methods = list(
-                     lasso = TRUE,
-                     rf = TRUE,
-                     corr = TRUE,
-                     apply.collinear = c("corr","rf","lasso","no_reduction")))
+                   n_windows = 12
+)
 
-
-### 3) Set Project Name  ==========================================================
+### 3) Set Project Name  ========================================================
 project_id <- "example_project"
 
-### 4) Set User Email  ============================================================
+### 4) Set User Email  ==========================================================
 user_email <- "user@domain.com"
 
-### 5) Set Access Key ============================================================
+### 5) Set Access Key ===========================================================
 access_key <- "User access key"
 
-### Send request  ===============================================================
-faas_api(data_list, date_variable, date_format, model_spec, project_id, user_email, access_key) 
+# ### Send request  =============================================================
+faas_api(data_list, date_variable, date_format,
+         model_spec, project_id, user_email,
+         access_key)
+
+
 
