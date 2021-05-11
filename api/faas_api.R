@@ -21,7 +21,7 @@
 
 
 .prepare_body <- function(data_list, date_variable, date_format, model_spec, project_id, user_email) {
-
+  
   # Trata caracteres especiais ===============================
   names(data_list) <- make.names(iconv(names(data_list), to = 'ASCII//TRANSLIT'))
   date_variable <- make.names(iconv(date_variable, to = 'ASCII//TRANSLIT'), unique = TRUE)
@@ -64,7 +64,7 @@
                project_id = project_id,
                date_variable = date_variable,
                date_format = date_format
-               )
+  )
   
   # Comprime a lista em 'json' e depois em 'base64' ========================
   body <- caTools::base64encode(base::memCompress(jsonlite::toJSON(body), type = "gzip"))
@@ -85,17 +85,16 @@ validate_request <- function(data_list, date_variable, date_format, model_spec, 
   base_url <- .get_url(run_local)
   url <- paste0(base_url, "validate")
   response <- httr::POST(url,
-                          body = list(body = body),
-                          httr::add_headers(.headers = headers),
-                          encode = "json")
-
+                         body = list(body = body),
+                         httr::add_headers(.headers = headers),
+                         encode = "json",
+                         config = httr::timeout(1200))
+  
   if(response$status_code == 200) {
     message("HTTP 200:\n", 
             "Request successfully received and validated!\n
              Now you can call the faas_api function to run your model")
-    
-    
-    print(str(content(response)))
+    message(str(content(response)))
   } else {
     message("Something went wrong!\nStatus code:", response$status_code)
     message(str(content(response)))
@@ -116,25 +115,26 @@ validate_request <- function(data_list, date_variable, date_format, model_spec, 
 faas_api <- function(data_list, date_variable, date_format, model_spec, project_id, user_email, access_key, run_local = FALSE, skip_validation = FALSE) {  
   
   body <- .prepare_body(data_list, date_variable, date_format, model_spec, project_id, user_email)
-
+  
   # Define a chave de acesso para poder fazer requisições via API ============
   headers = c(`Authorization` = access_key)
   
   ### Envia requisição POST ==================================================
   base_url <- .get_url(run_local)
   url <- paste0(base_url, "cluster")
-
-  response <- httr::POST(
-                          url,
-                          body = list(body = body, skip_validation = skip_validation),
-                          httr::add_headers(.headers = headers),
-                          encode = "json")
   
-
+  response <- httr::POST(
+    url,
+    body = list(body = body, skip_validation = skip_validation),
+    httr::add_headers(.headers = headers),
+    encode = "json")
+  
+  
   if(response$status_code %in% c(200,201)) {
     message("HTTP ", response$status_code,":\n", 
             "Request successfully received!\n
              Results will soon be available in your Projects module")
+    message(str(content(response)))
   } else {
     message("Something went wrong!\nStatus code:", response$status_code)
     message(str(content(response)))
