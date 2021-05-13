@@ -127,7 +127,8 @@ faas_api <- function(data_list, date_variable, date_format, model_spec, project_
     url,
     body = list(body = body, skip_validation = skip_validation),
     httr::add_headers(.headers = headers),
-    encode = "json")
+    encode = "json",
+    config = httr::timeout(1200))
   
   
   if(response$status_code %in% c(200,201)) {
